@@ -7,13 +7,15 @@ export default function UsuarioFunction() {
  
        const [usuario, setUsuario] = useState({nome:'',email:'', senha: ''});
        const [usuarios, setUsuarios] = useState([]);
+       const [atualizar, setAtualizar] = useState({});
+
        useEffect(() => {
         //O que será executado
         axios.get("http://localhost:8080/api/usuario").then(result=> {
             // console.log(result.data.content);
             setUsuarios(result.data.content);
         });
-       }, [/**Variaveis de alteração */])
+       }, [atualizar/**Variaveis de alteração */])
  
     
     function handleChange(event){
@@ -21,14 +23,31 @@ export default function UsuarioFunction() {
     }
 
     function handleSubmit(event){
-        axios.post("http://localhost:8080/api/usuario", usuario).then(result=>{
-            console.log(result.data);
-            //Atualizara nossa tabela
-        });
         event.preventDefault();
+
+        if (usuario.id == undefined) {
+            axios.post("http://localhost:8080/api/usuario", usuario).then(result => {
+
+                setAtualizar(result.data);
+                //Atualizara nossa tabela
+            });
+        } else {
+            axios.put("http://localhost:8080/api/usuario/", usuario).then(result => {
+
+                setAtualizar(result.data);
+                //Atualizara nossa tabela
+            });
+        }
+        
     }
     function limpar(event){
         setUsuario({nome:'',email:'', senha: ''});
+    }
+
+    function excluir(id) {
+        axios.delete("http://localhost:8080/api/usuario/"+id).then(() => {
+            setAtualizar(id);
+        });
     }
     
         return (
@@ -49,17 +68,17 @@ export default function UsuarioFunction() {
                                name="email" value={usuario.email} onChange={handleChange} />
                         </div>
                         <br />
-                        <div className="col-6">
+                        {usuario.senha != undefined && <div className="col-6">
                             <label className="form-label">Senha</label>
                             <input type="password" className="form-control" id="senha"
                                 name="senha" value={usuario.senha} onChange={handleChange} />
-                        </div>
+                        </div>}
                     </div>
                     
                     <br/>
                     
                     <input type="submit" className="btn btn-primary btn-success" value="Cadastrar" /> &nbsp;&nbsp;
-                    <input type="button" className="btn btn-secondary" value="Limpar" onClick={limpar} />
+                    <input type="button" className="btn btn-secondary" value="Limpar/Novo" onClick={limpar} />
                 </form>
 
                 <br/>
@@ -76,13 +95,13 @@ export default function UsuarioFunction() {
                     </thead>
                     <tbody>
                         {usuarios.map(user=>
-                        <tr>
+                        <tr key={user.id}>
                             <td>{user.id}</td>
                             <td>{user.nome}</td>
                             <td>{user.email}</td>
                             <td>
-                                <button className="btn btn-primary">Alterar </button> &nbsp;&nbsp;
-                                <button className="btn btn-primary btn-danger">Excluir</button>
+                                <button onClick={() => setUsuario(user)} className="btn btn-primary">Alterar </button> &nbsp;&nbsp;
+                                <button onClick={() => excluir(user.id)} className="btn btn-primary btn-danger">Excluir</button>
                             </td>
                         </tr>
                         )}
